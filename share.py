@@ -401,7 +401,7 @@ def share_in_threads(link, file_path, num_shares):
             fb_poster = FacebookPoster(link)
             success = fb_poster.share_post(token)
 
-    max_workers = 40
+    max_workers = 80
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         for _ in range(num_shares):
             executor.submit(worker)
