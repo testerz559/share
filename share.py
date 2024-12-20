@@ -465,10 +465,30 @@ def share():
 
     share_in_threads(link, file_path, num_shares)
 def main2(): 
-    open('/sdcard/boostphere/FRAACCOUNT.txt', 'a').write('')
-    open('/sdcard/boostphere/FRAPAGES.txt', 'a').write('')
-    open('/sdcard/boostphere/RPWACCOUNT.txt', 'a').write('')
-    open('/sdcard/boostphere/RPWACCOUNT.txt', 'a').write('')
+    import os
+
+# List of file paths to check or create
+file_paths = [
+    '/sdcard/boostphere/FRAACCOUNT.txt',
+    '/sdcard/boostphere/FRAPAGES.txt',
+    '/sdcard/boostphere/RPWACCOUNT.txt',
+]
+
+# Ensure the directory exists
+for file_path in file_paths:
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        print(f"Created directory: {directory}")
+
+    # Create the file if it doesn't exist
+    if not os.path.exists(file_path):
+        with open(file_path, 'w') as file:
+            pass  # Create an empty file
+        print(f"Created file: {file_path}")
+    else:
+        print(f"File already exists: {file_path}")
+
     fraaccounts_file = '/sdcard/boostphere/FRAACCOUNT.txt'
     frapages_file = '/sdcard/boostphere/FRAPAGES.txt'
     rpwaccounts = '/sdcard/boostphere/RPWACCOUNT.txt'
@@ -495,4 +515,3 @@ def main2():
 
 if __name__ == "__main__":
     main2()
-
