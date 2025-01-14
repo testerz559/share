@@ -5768,27 +5768,7 @@ def pub():
 
 
 
-import os
-try:
-    import requests
-    from selenium import webdriver
-    from selenium.webdriver.common.by import By
-    from selenium.webdriver.chrome.options import Options
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
-    from time import sleep
-except ImportError:
-    os.system('pip install selenium requests')
 
-# Define constants
-LOGGING_URL = 'https://www.facebook.com'
-HEADLESS_OPTIONS = Options()
-HEADLESS_OPTIONS.add_argument('--headless')
-HEADLESS_OPTIONS.add_argument('--disable-gpu')
-HEADLESS_OPTIONS.add_argument('--disable-dev-shm-usage')
-HEADLESS_OPTIONS.add_argument('--no-sandbox')
-HEADLESS_OPTIONS.add_argument('--disable-features=PermissionsPolicy')
-HEADLESS_OPTIONS.add_experimental_option('excludeSwitches', ['enable-logging'])
 
 # Function to clear console
 def clear():
