@@ -7,21 +7,7 @@ import sys
 import os
 import platform
 import re
-def jovan():
-    adrkz = "\033[34m "
-    print(f"""
-    {adrkz} 
-                
-        
-               
-
-                           ██╗███╗   ██╗██████╗ ██╗ ██████╗  ██████╗ 
-                           ██║████╗  ██║██╔══██╗██║██╔════╝ ██╔═══██╗
-                           ██║██╔██╗ ██║██║  ██║██║██║  ███╗██║   ██║
-                           ██║██║╚██╗██║██║  ██║██║██║   ██║██║   ██║
-                           ██║██║ ╚████║██████╔╝██║╚██████╔╝╚██████╔╝
-                           ╚═╝╚═╝  ╚═══╝╚═════╝ ╚═╝ ╚═════╝  ╚═════╝
-     {blue}───────────────────────────────────────────────────────────────\033[0m""")
+# Color codes for formatting output
 purple = "\033[1;35m"
 blue = "\033[34m"
 green = "\033[1;32m"
@@ -416,19 +402,12 @@ def axl1():
     proz(file_path, token_output_path, extract_type)
 
 
-import os
-import random
-import requests
-import time
-from concurrent.futures import ThreadPoolExecutor
-
-
 def get_token_from_file(file_path):
-    """Read tokens from the file and return a list of tokens."""
+    """Read tokens from the file and return a random token."""
     with open(file_path, 'r') as file:
         lines = file.readlines()
-        return [line.strip().split('|')[1] for line in lines if '|' in line]
-
+        tokens = [line.strip().split('|')[1] for line in lines if '|' in line]
+    return random.choice(tokens)
 
 class FacebookPoster:
     def __init__(self, link):
@@ -438,94 +417,86 @@ class FacebookPoster:
         """Shares a post on the user's feed with 'Only Me' privacy."""
         url = "https://graph.facebook.com/v13.0/me/feed"
         payload = {
-            'link': self.link,
-            'published': '1',
-            'privacy': '{"value":"EVERYONE"}',
-            'access_token': token
-        }
-
+        'link': self.link,  # The link to share
+        'published': '1',  # Publish the post immediately
+        'privacy': '{"value":"EVERYONE"}',  # Set privacy to Public
+        'access_token': token
+    }
+        response = requests.post(url, data=payload)
+        print(response)
+        
         try:
             response = requests.post(url, data=payload)
+
+           
             if response.status_code == 200:
-                print("Successfully Shared")
+                print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+                print("      Successfully Shared")
                 return True
             else:
-                print(f"Failed to share. Status code: {response.status_code}")
                 return False
         except requests.exceptions.RequestException as e:
             print(f"An error occurred: {e}")
             return False
 
-
 def share_in_threads(link, file_path, num_shares):
-    start_all = time.time()
+    start_all = time.time()  # Record the start time for the entire operation
+    
+    def worker():
+        success = False
+        while not success:
+            token = get_token_from_file(file_path)
+            fb_poster = FacebookPoster(link)
+            success = fb_poster.share_post(token)
 
-    tokens = get_token_from_file(file_path)
-    if len(tokens) < num_shares:
-        print("Not enough tokens to meet the requested number of shares.")
-        return
+    max_workers = 30
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        for _ in range(num_shares):
+            executor.submit(worker)
 
-    def worker(token):
-        fb_poster = FacebookPoster(link)
-        fb_poster.share_post(token)
+    end_all = time.time()  # Record the end time for the entire operation
+    duration = end_all - start_all
+    print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+    print(f"\n  {yellow}Sharing started: {start_all}")
+    print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+    print(f"     {yellow}Sharing ended: {end_all}")
+    print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+    print(f"    {yellow}Total duration: {duration:.2f} seconds\033[0m")
+def count_tokens(accounts_file, pages_file):
+    """Count the number of accounts and pages stored in the respective files."""
+    total_accounts = 0
+    total_pages = 0
 
-    with ThreadPoolExecutor(max_workers=20) as executor:
-        for token in tokens[:num_shares]:
-            executor.submit(worker, token)
+    try:
+        with open(accounts_file, 'r') as af:
+            total_accounts = sum(1 for line in af if line.strip())  # Count non-empty lines
+    except FileNotFoundError:
+        print(f"Account file not found: {accounts_file}")
 
-    end_all = time.time()
-    print(f"\nSharing started at: {time.ctime(start_all)}")
-    print(f"Sharing ended at: {time.ctime(end_all)}")
-    print(f"Total duration: {end_all - start_all:.2f} seconds")
+    try:
+        with open(pages_file, 'r') as pf:
+            total_pages = sum(1 for line in pf if line.strip())  # Count non-empty lines
+    except FileNotFoundError:
+        print(f"Page file not found: {pages_file}")
 
-
-def count_tokens(*file_paths):
-    """Count the number of lines in each provided file."""
-    counts = []
-    for file_path in file_paths:
-        try:
-            with open(file_path, 'r') as file:
-                counts.append(sum(1 for line in file if line.strip()))
-        except FileNotFoundError:
-            counts.append(0)
-    return counts
-
-
-def create_required_files():
-    """Ensure directories and files exist."""
-    file_paths = [
-        '/sdcard/boostphere/FRAACCOUNT.txt',
-        '/sdcard/boostphere/FRAPAGES.txt',
-        '/sdcard/boostphere/RPWACCOUNT.txt',
-        '/sdcard/boostphere/RPWPAGES.txt',
-    ]
-
-    for file_path in file_paths:
-        directory = os.path.dirname(file_path)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-            print(f"Created directory: {directory}")
-
-        if not os.path.exists(file_path):
-            with open(file_path, 'w') as file:
-                pass  # Create an empty file
-            print(f"Created file: {file_path}")
-
-
+    return total_accounts, total_pages
 def share():
-    print("CHOOSE TYPE OF ACCOUNTS TO AUTO SHARE:")
-    print("[1] FRA ACCOUNT")
-    print("[2] FRA PAGES")
-    print("[3] RPW ACCOUNT")
-    print("[4] RPW PAGES")
-    print("[0] EXIT")
-    choice = input("Choice: ")
-
+    clear_screen()
+    jovan()
+    print(f"""     \033[1;37mCHOOSE TYPE OF ACCOUNTS TO AUTO SHARE: 
+     \033[1;34m[1] \033[1;32mFRA ACCOUNT 
+     \033[1;34m[2] \033[1;32mFRA PAGES
+     \033[1;34m[3] \033[1;32mRPW ACCOUNT
+     \033[1;34m[4] \033[1;32mRPW PAGES
+     \033[1;31m[0] \033[1;31mEXIT 
+    \033[1;34m───────────────────────────────────────────────────────────────\033[0m""")
+    choice = input(f"     {blue}Choice ")
+    
     file_map = {
         '1': '/sdcard/boostphere/FRAACCOUNT.txt',
         '2': '/sdcard/boostphere/FRAPAGES.txt',
         '3': '/sdcard/boostphere/RPWACCOUNT.txt',
-        '4': '/sdcard/boostphere/RPWPAGES.txt'
+        '4': '/sdcard/boostphere/RPWACCOUNT.txt'
     }
 
     file_path = file_map.get(choice)
@@ -533,38 +504,62 @@ def share():
         print("Invalid choice. Exiting.")
         return
 
-    post_id = input("Enter the post ID to share: ")
-    num_shares = int(input("Limit: "))
+    print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+    a = input(f"   {yellow}Enter the post ID to share: ")
+    post_id = get_combined_data(a)
+    print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+    num_shares = int(input(f"   {blue}Limit: "))
+
+    # Construct the link using the post ID
     link = f"https://www.facebook.com/{post_id}"
 
     share_in_threads(link, file_path, num_shares)
+def main2(): 
+    import os
 
+# List of file paths to check or create
+file_paths = [
+    '/sdcard/boostphere/FRAACCOUNT.txt',
+    '/sdcard/boostphere/FRAPAGES.txt',
+    '/sdcard/boostphere/RPWACCOUNT.txt',
+]
 
-def main():
-    create_required_files()
-    fra_file = '/sdcard/boostphere/FRAACCOUNT.txt'
-    fra_pages_file = '/sdcard/boostphere/FRAPAGES.txt'
-    rpw_file = '/sdcard/boostphere/RPWACCOUNT.txt'
-    rpw_pages_file = '/sdcard/boostphere/RPWPAGES.txt'
+# Ensure the directory exists
+for file_path in file_paths:
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        print(f"Created directory: {directory}")
 
-    total_accounts, total_pages, rpw_accounts, rpw_pages = count_tokens(
-        fra_file, fra_pages_file, rpw_file, rpw_pages_file
-    )
+    # Create the file if it doesn't exist
+    if not os.path.exists(file_path):
+        with open(file_path, 'w') as file:
+            pass  # Create an empty file
+        print(f"Created file: {file_path}")
+    else:
+        print(f"File already exists: {file_path}")
 
-    print(f"OVERVIEW OF STORED ACCOUNT & PAGES:")
-    print(f"FRA ACCOUNT : {total_accounts}")
-    print(f"FRA PAGES   : {total_pages}")
-    print(f"RPW ACCOUNT : {rpw_accounts}")
-    print(f"RPW PAGES   : {rpw_pages}")
-
-    print("[1] EXTRACT ACCOUNT")
-    print("[2] AUTO SHARE")
-    choice = input("Enter Choice: ")
-
-    if choice == '2':
+    fraaccounts_file = '/sdcard/boostphere/FRAACCOUNT.txt'
+    frapages_file = '/sdcard/boostphere/FRAPAGES.txt'
+    rpwaccounts = '/sdcard/boostphere/RPWACCOUNT.txt'
+    rpwpages = '/sdcard/boostphere/RPWPAGES.txt'
+    total_accounts, total_pages = count_tokens(fraaccounts_file, frapages_file)
+    total_account_rpw, total_pages_rpw = count_tokens(rpwaccounts,rpwpages)
+    clear_screen()
+    jovan()
+    print(f"""                 {yellow}OVERVIEW OF STORED ACCOUNT & PAGES💫
+          
+                            {blue}FRA ACCOUNT{yellow} : {green}{total_accounts}
+                            {blue}FRA PAGES  {yellow} : {green}{total_pages}
+                            {blue}RPW ACCOUNT{yellow} : {green}{ total_account_rpw}
+                            {blue}RPW PAGES  {yellow} : {green}{total_pages_rpw}
+      {blue}───────────────────────────────────────────────────────────────\033[0m""")
+    print(f"     {blue}[1] {yellow}EXTRACT ACCOUNT")
+    print(f"     {blue}[2] {yellow}AUTO SHARE ")
+    print(f"    {blue}───────────────────────────────────────────────────────────────\033[0m")
+    choice = input(f'    {yellow}Enter Choice: ')
+    if choice == '1': 
+        extraction()
+    if choice == '2': 
         share()
-
-
-if __name__ == "__main__":
-    main()
 
